@@ -173,7 +173,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
   fontSize:"12px",
   color:"#777",
   marginTop: "2px",
-  marginBottom:"4px"
+  marginBottom:"0px"
 }}>
   Вы можете описать ситуацию своими словами — не обязательно медицинским языком
 </p>
