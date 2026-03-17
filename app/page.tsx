@@ -64,14 +64,13 @@ export default function Home() {
   </a>
 </div>
 
-      <p style={{marginTop:"40px",color:"gray",fontSize:"14px"}}>
+      <p style={{marginTop:"40px",marginBottom:"0",lineHeight:"1.4",color:"gray",fontSize:"14px"}}>
   Заключение носит информационный характер и не заменяет очную консультацию врача.
 </p>
 
-<p style={{marginTop:"8px",color:"gray",fontSize:"13px"}}>
+<p style={{marginTop:"2px",marginBottom:"0",lineHeight:"1.4",color:"gray",fontSize:"13px"}}>
   Если ответ не будет предоставлен в течение 48 часов — мы вернем деньги.
 </p>
-      
 
     </main>
 
