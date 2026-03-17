@@ -157,7 +157,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
         />
 
         <textarea
-  placeholder="Опишите вашу ситуацию"
+  placeholder="Вы можете описать ситуацию своими словами — не обязательно медицинским языком"
   value={question}
   style={{
     width:"100%",
@@ -168,16 +168,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
   }}
   onChange={(e)=>setQuestion(e.target.value)}
 />
-
-<p style={{
-  fontSize:"12px",
-  color:"#777",
-  marginTop: "2px",
-  marginBottom:"4px"
-}}>
-  Вы можете описать ситуацию своими словами — не обязательно медицинским языком
-</p>
-        
+  
 <button
   style={{
     padding:"10px 16px",
