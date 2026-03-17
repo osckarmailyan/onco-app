@@ -37,19 +37,27 @@ export default function Home() {
       </p>
 
       <button
-        onClick={()=>window.location.href="/request"}
-        style={{
-          marginTop:"40px",
-          background:"black",
-          color:"white",
-          padding:"14px 26px",
-          border:"none",
-          cursor:"pointer",
-          fontSize:"16px"
-        }}
-      >
-        Получить второе мнение
-      </button>
+  onClick={async () => {
+    const res = await fetch("/api/pay", {
+      method: "POST",
+    });
+
+    const data = await res.json();
+
+    window.location.href = data.confirmation.confirmation_url;
+  }}
+  style={{
+    marginTop:"40px",
+    background:"black",
+    color:"white",
+    padding:"14px 26px",
+    border:"none",
+    cursor:"pointer",
+    fontSize:"16px"
+  }}
+>
+  Получить второе мнение — 10 000 ₽
+</button>
 
       <div style={{marginTop:"20px"}}>
   <a
