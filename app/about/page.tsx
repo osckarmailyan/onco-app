@@ -148,6 +148,20 @@ export default function About() {
       не заменяет очную консультацию врача.
       </p>
 
+      {/* КОНТАКТЫ */}
+<p style={{marginTop:"30px",fontWeight:"bold"}}>
+  Контакты
+</p>
+
+<p>
+  Email: oncoexperts@protonmail.com
+</p>
+
+<p style={{marginTop:"20px",color:"#777"}}>
+  Заявки принимаются только через форму на сайте.
+  Ответ предоставляется после оплаты.
+</p>
+
     </main>
 
   );
