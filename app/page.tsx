@@ -56,7 +56,7 @@ export default function Home() {
     fontSize:"16px"
   }}
 >
-  Получить второе мнение — 10 000 ₽
+  Получить второе мнение
 </button>
 
       <div style={{marginTop:"20px"}}>

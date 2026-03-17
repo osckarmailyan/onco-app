@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       },
       confirmation: {
         type: "redirect",
-        return_url: "https://oncoexperts.ru/request",
+        return_url: "https://oncoexperts.ru/request?paid=true",
       },
       capture: true,
       description: "Второе мнение врача",
@@ -28,5 +28,8 @@ export async function POST(req: Request) {
 
   const data = await response.json();
 
-  return NextResponse.json(data);
+  return NextResponse.json({
+    confirmation_url: data.confirmation.confirmation_url,
+    payment_id: data.id,
+  });
 }
