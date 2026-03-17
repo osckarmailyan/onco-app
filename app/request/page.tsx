@@ -157,17 +157,25 @@ const fileInputRef = useRef<HTMLInputElement>(null);
         />
 
         <textarea
-          placeholder="Опишите вашу ситуацию"
-          value={question}
-          style={{
-            width:"100%",
-            height:"120px",
-            padding:"12px",
-            marginBottom:"10px",
-            border:"1px solid #ccc"
-          }}
-          onChange={(e)=>setQuestion(e.target.value)}
-        />
+  placeholder="Опишите вашу ситуацию"
+  value={question}
+  style={{
+    width:"100%",
+    height:"120px",
+    padding:"12px",
+    marginBottom:"10px",
+    border:"1px solid #ccc"
+  }}
+  onChange={(e)=>setQuestion(e.target.value)}
+/>
+
+<p style={{
+  fontSize:"13px",
+  color:"#777",
+  marginBottom:"10px"
+}}>
+  Вы можете описать ситуацию своими словами — не обязательно медицинским языком
+</p>
         
 <button
   style={{
