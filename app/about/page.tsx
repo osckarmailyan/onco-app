@@ -156,9 +156,6 @@ export default function About() {
 
 <p>
   Email: oncoexperts@protonmail.com
-</p>
-
-<p>
   ИНН: 344113979050
 </p>
 
