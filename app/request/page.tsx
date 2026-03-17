@@ -1,16 +1,30 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 
+
 export default function Request() {
+
+  const searchParams = useSearchParams();
+
+  if (searchParams.get("paid") !== "true") {
+    return (
+      <main style={{padding:"40px",fontFamily:"sans-serif"}}>
+        <h1>Доступ запрещён</h1>
+        <p>Сначала оплатите консультацию</p>
+      </main>
+    );
+  }
 
   const [email,setEmail] = useState("");
   const [question,setQuestion] = useState("");
   const [files,setFiles] = useState<File[]>([]);
-const [isUploading,setIsUploading] = useState(false);
+  const [isUploading,setIsUploading] = useState(false);
 
-const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   function formatSize(bytes:number){
     const mb = bytes / (1024 * 1024);
     return mb.toFixed(1) + " MB";

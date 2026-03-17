@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       },
       confirmation: {
         type: "redirect",
-        return_url: "https://oncoexperts.ru/success",
+        return_url: "https://oncoexperts.ru/request",
       },
       capture: true,
       description: "Второе мнение врача",
