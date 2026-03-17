@@ -170,9 +170,10 @@ const fileInputRef = useRef<HTMLInputElement>(null);
 />
 
 <p style={{
-  fontSize:"13px",
+  fontSize:"12px",
   color:"#777",
-  marginBottom:"10px"
+  marginTop: "2px",
+  marginBottom:"4px"
 }}>
   Вы можете описать ситуацию своими словами — не обязательно медицинским языком
 </p>
