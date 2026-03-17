@@ -154,8 +154,8 @@ export default function About() {
   Контакты
 </p>
 
-<p>
-  Email: oncoexperts@protonmail.com
+<p style={{marginTop:"10px"}}>
+  Email: oncoexperts@protonmail.com<br/>
   ИНН: 344113979050
 </p>
 
