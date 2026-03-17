@@ -148,6 +148,7 @@ export default function About() {
       не заменяет очную консультацию врача.
       </p>
 
+
       {/* КОНТАКТЫ */}
 <p style={{marginTop:"30px",fontWeight:"bold"}}>
   Контакты
@@ -155,6 +156,10 @@ export default function About() {
 
 <p>
   Email: oncoexperts@protonmail.com
+</p>
+
+<p>
+  ИНН: 344113979050
 </p>
 
 <p style={{marginTop:"20px",color:"#777"}}>
