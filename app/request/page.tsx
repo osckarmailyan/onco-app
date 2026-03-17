@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabase";
 export default function Request() {
 
   const searchParams = useSearchParams();
+  const paymentId = searchParams.get("payment_id");
 
   if (searchParams.get("paid") !== "true") {
     return (
@@ -88,12 +89,13 @@ export default function Request() {
     const { error } = await supabase
       .from("cases")
       .insert([
-        {
-          email:email,
-          question:question,
-          file:uploadedFiles
-        }
-      ]);
+  {
+    email:email,
+    question:question,
+    file:uploadedFiles,
+    payment_id: paymentId
+  }
+]);
 
     if(error){
       alert("Ошибка отправки");

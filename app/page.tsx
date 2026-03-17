@@ -44,7 +44,8 @@ export default function Home() {
 
     const data = await res.json();
 
-    window.location.href = data.confirmation.confirmation_url;
+    window.location.href =
+      data.confirmation_url + "?payment_id=" + data.payment_id;
   }}
   style={{
     marginTop:"40px",
