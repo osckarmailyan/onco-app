@@ -163,7 +163,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
     width:"100%",
     height:"120px",
     padding:"12px",
-    marginBottom:"10px",
+    marginBottom:"3px",
     border:"1px solid #ccc"
   }}
   onChange={(e)=>setQuestion(e.target.value)}
@@ -173,7 +173,7 @@ const fileInputRef = useRef<HTMLInputElement>(null);
   fontSize:"12px",
   color:"#777",
   marginTop: "2px",
-  marginBottom:"0px"
+  marginBottom:"4px"
 }}>
   Вы можете описать ситуацию своими словами — не обязательно медицинским языком
 </p>
