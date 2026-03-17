@@ -4,13 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useSearchParams } from "next/navigation";
+
 
 export default function Admin() {
 
   const [cases,setCases] = useState<any[]>([]);
-  const searchParams = useSearchParams();
-const key = searchParams.get("key");
+  
 
   async function loadCases(){
 
@@ -28,14 +27,6 @@ const key = searchParams.get("key");
   useEffect(()=>{
     loadCases();
   },[]);
-
-  if(key !== "oskar123"){
-  return (
-    <main style={{padding:"40px",fontFamily:"sans-serif"}}>
-      <h1>Доступ запрещён</h1>
-    </main>
-  );
-}
 
   return(
 
