@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase";
 
 const allowedTypes = [
   "application/pdf",
@@ -17,10 +16,6 @@ const maxFileSize = 50 * 1024 * 1024;
 function formatSize(bytes: number) {
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(1)} MB`;
-}
-
-function getSafeFileName(name: string) {
-  return name.replace(/[^\w.-]/g, "_");
 }
 
 export default function Request() {
@@ -59,46 +54,21 @@ export default function Request() {
 
     setIsUploading(true);
 
-    const uploadedFiles: string[] = [];
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("question", question);
+    files.forEach((file) => formData.append("files", file));
 
-    for (const file of files) {
-      const validationError = validateFile(file);
-
-      if (validationError) {
-        setError(validationError);
-        setIsUploading(false);
-        return;
-      }
-
-      const fileName = `${crypto.randomUUID()}_${getSafeFileName(file.name)}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from("cases")
-        .upload(fileName, file, {
-          contentType: file.type,
-        });
-
-      if (uploadError) {
-        setError("Ошибка загрузки файла. Попробуйте еще раз.");
-        setIsUploading(false);
-        return;
-      }
-
-      uploadedFiles.push(data.path);
-    }
-
-    const { error: insertError } = await supabase.from("cases").insert([
-      {
-        email,
-        file: uploadedFiles,
-        question,
-        status: "new",
-      },
-    ]);
+    const response = await fetch("/api/submit-request", {
+      body: formData,
+      method: "POST",
+    });
+    const result = (await response.json()) as { error?: string };
 
     setIsUploading(false);
 
-    if (insertError) {
-      setError("Ошибка отправки заявки. Попробуйте позже.");
+    if (!response.ok) {
+      setError(result.error || "Ошибка отправки заявки. Попробуйте позже.");
       return;
     }
 
