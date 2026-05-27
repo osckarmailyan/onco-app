@@ -1,288 +1,240 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
+const allowedTypes = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
+const maxFileSize = 50 * 1024 * 1024;
+
+function formatSize(bytes: number) {
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)} MB`;
+}
+
+function getSafeFileName(name: string) {
+  return name.replace(/[^\w.-]/g, "_");
+}
+
 export default function Request() {
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [email, setEmail] = useState("");
+  const [question, setQuestion] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [email,setEmail] = useState("");
-  const [question,setQuestion] = useState("");
-  const [files,setFiles] = useState<File[]>([]);
-const [isUploading,setIsUploading] = useState(false);
+  function validateFile(file: File) {
+    if (!allowedTypes.includes(file.type)) {
+      return "Недопустимый формат файла. Поддерживаются PDF, JPG, PNG, DOC и DOCX.";
+    }
 
-const fileInputRef = useRef<HTMLInputElement>(null);
-  function formatSize(bytes:number){
-    const mb = bytes / (1024 * 1024);
-    return mb.toFixed(1) + " MB";
+    if (file.size > maxFileSize) {
+      return "Файл больше 50 MB. Для КТ или МРТ загрузите файл на облачный диск и вставьте ссылку в описание.";
+    }
+
+    return "";
   }
 
-  async function sendRequest(){
+  async function sendRequest() {
+    setError("");
 
-    setIsUploading(true);
-
-    if(!email.includes("@")){
-      alert("Введите корректный email");
-      setIsUploading(false);
+    if (!email.includes("@")) {
+      setError("Введите корректный email.");
       return;
     }
 
-    let uploadedFiles:string[] = [];
+    if (!question.trim() && files.length === 0) {
+      setError("Опишите ситуацию или прикрепите документы.");
+      return;
+    }
 
-    for(const file of files){
+    setIsUploading(true);
 
-      const allowedTypes = [
-        "application/pdf",
-        "image/jpeg",
-        "image/png",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-      ];
+    const uploadedFiles: string[] = [];
 
-      if(!allowedTypes.includes(file.type)){
-        alert("Недопустимый формат файла");
+    for (const file of files) {
+      const validationError = validateFile(file);
+
+      if (validationError) {
+        setError(validationError);
         setIsUploading(false);
         return;
       }
 
-      if(file.size > 50 * 1024 * 1024){
-        alert("Файл больше 50MB. Если это КТ или МРТ — загрузите файл на облачный диск и вставьте ссылку в описание.");
-        setIsUploading(false);
-        return;
-      }
-
-      const cleanName = file.name.replace(/[^\w.]/g,"_");
-      const fileName = Date.now()+"_"+cleanName;
-
-      const { data, error } = await supabase
-        .storage
+      const fileName = `${crypto.randomUUID()}_${getSafeFileName(file.name)}`;
+      const { data, error: uploadError } = await supabase.storage
         .from("cases")
-        .upload(fileName,file,{
-          contentType:file.type
+        .upload(fileName, file, {
+          contentType: file.type,
         });
 
-      if(error){
-        console.log(error);
-        alert("Ошибка загрузки файла");
+      if (uploadError) {
+        setError("Ошибка загрузки файла. Попробуйте еще раз.");
         setIsUploading(false);
         return;
       }
 
       uploadedFiles.push(data.path);
-
     }
 
-    const { error } = await supabase
-      .from("cases")
-      .insert([
-        {
-          email:email,
-          question:question,
-          file:uploadedFiles
-        }
-      ]);
-
-    if(error){
-      alert("Ошибка отправки");
-    }else{
-      alert("Запрос отправлен");
-      setEmail("");
-      setQuestion("");
-      setFiles([]);
-    }
+    const { error: insertError } = await supabase.from("cases").insert([
+      {
+        email,
+        file: uploadedFiles,
+        question,
+        status: "new",
+      },
+    ]);
 
     setIsUploading(false);
 
-  }
-
-  return(
-
-    <main style={{maxWidth:"700px",margin:"100px auto",fontFamily:"sans-serif"}}>
-
-      <h1 style={{fontSize:"34px",fontWeight:"bold"}}>
-        Отправить документы на второе мнение
-      </h1>
-
-      <p style={{marginTop:"20px"}}>
-        Загрузите медицинские документы и опишите вашу ситуацию.
-      </p>
-
-      <div style={{
-        background:"#fff8e1",
-        padding:"20px",
-        borderRadius:"8px",
-        marginTop:"20px",
-        fontSize:"14px"
-      }}>
-
-        <b>Правила загрузки документов</b>
-
-        <ul style={{marginTop:"10px"}}>
-
-          <li>
-            Максимальный размер одного файла — <b>50 MB</b>
-          </li>
-
-          <li>
-            Поддерживаемые форматы:
-            <b> PDF, JPG, PNG, DOC, DOCX</b>
-          </li>
-
-          <li>
-            Вы можете прикрепить несколько файлов
-          </li>
-
-          <li>
-            <b>КТ и МРТ</b> обычно имеют большой размер.
-            Загрузите их на облако (Google Drive / Яндекс Диск / Dropbox)
-            и вставьте ссылку в описание.
-          </li>
-
-        </ul>
-
-      </div>
-
-      <div style={{marginTop:"40px"}}>
-
-        <input
-          type="email"
-          placeholder="Ваш email"
-          value={email}
-          style={{
-            width:"100%",
-            padding:"12px",
-            marginBottom:"10px",
-            border:"1px solid #ccc"
-          }}
-          onChange={(e)=>setEmail(e.target.value)}
-        />
-
-        <textarea
-  placeholder="Вы можете описать ситуацию своими словами — не обязательно медицинским языком"
-  value={question}
-  style={{
-    width:"100%",
-    height:"120px",
-    padding:"12px",
-    marginBottom:"3px",
-    border:"1px solid #ccc"
-  }}
-  onChange={(e)=>setQuestion(e.target.value)}
-/>
-  
-<button
-  style={{
-    padding:"10px 16px",
-    border:"1px solid #ccc",
-    background:"#f5f5f5",
-    cursor:"pointer",
-    marginBottom:"15px"
-  }}
-  onClick={()=>{
-    if(fileInputRef.current){
-      fileInputRef.current.click()
+    if (insertError) {
+      setError("Ошибка отправки заявки. Попробуйте позже.");
+      return;
     }
-  }}
->
-  Выбрать файлы
-</button>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-          multiple
-          style={{display:"none"}}
-          onChange={(e)=>{
-
-            const newFiles = Array.from(e.target.files || []);
-
-            for(const file of newFiles){
-              if(file.size > 50 * 1024 * 1024){
-                alert("Вы прикрепили файл больше 50MB. Загрузите такие файлы на облачный диск и вставьте ссылку.");
-                return;
-              }
-            }
-
-            setFiles(prev => [...prev,...newFiles]);
-
-          }}
-        />
-
-        {files.length > 0 && (
-
-          <div style={{marginBottom:"15px"}}>
-
-            {files.map((file,i)=>(
-              <div key={i} style={{
-                display:"flex",
-                justifyContent:"space-between",
-                marginBottom:"6px",
-                borderBottom:"1px solid #eee",
-                paddingBottom:"4px"
-              }}>
-
-                <span>
-                  📎 {file.name} ({formatSize(file.size)})
-                </span>
-
-                <button
-                  style={{
-                    background:"none",
-                    border:"none",
-                    color:"red",
-                    cursor:"pointer"
-                  }}
-                  onClick={()=>{
-                    setFiles(files.filter((_,index)=>index !== i))
-                    if(fileInputRef.current){
-    fileInputRef.current.value = "";
+    setEmail("");
+    setQuestion("");
+    setFiles([]);
+    router.push("/success");
   }
-                  }}
-                >
-                  удалить
-                </button>
 
-              </div>
-            ))}
-
-          </div>
-
-        )}
-
-        {files.length > 0 && (
-          <p style={{color:"gray", marginBottom:"10px"}}>
-            📎 прикреплено файлов: {files.length}
+  return (
+    <main className="page">
+      <section className="shell narrow stack">
+        <div>
+          <p className="eyebrow">Заявка</p>
+          <h1 className="section-title">
+            Отправить документы на второе мнение
+          </h1>
+          <p className="lead">
+            Загрузите медицинские документы и опишите вашу ситуацию своими
+            словами.
           </p>
-        )}
+        </div>
 
-        {isUploading && (
-          <div style={{
-            marginBottom:"20px",
-            padding:"15px",
-            background:"#f5f5f5",
-            borderRadius:"8px"
-          }}>
-            Загрузка файлов...
+        <div className="notice">
+          <b>Правила загрузки документов</b>
+          <ul className="list">
+            <li>Максимальный размер одного файла - 50 MB</li>
+            <li>Поддерживаемые форматы: PDF, JPG, PNG, DOC, DOCX</li>
+            <li>Можно прикрепить несколько файлов</li>
+            <li>
+              КТ и МРТ обычно имеют большой размер. Загрузите их на облако и
+              вставьте ссылку в описание.
+            </li>
+          </ul>
+        </div>
+
+        <div className="card form">
+          <label className="stack">
+            <span className="muted">Ваш email</span>
+            <input
+              className="field"
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@example.com"
+              type="email"
+              value={email}
+            />
+          </label>
+
+          <label className="stack">
+            <span className="muted">Описание ситуации</span>
+            <textarea
+              className="field textarea"
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Опишите диагноз, назначенное лечение и главный вопрос врачу"
+              value={question}
+            />
+          </label>
+
+          <div>
+            <button
+              className="button button-secondary"
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+            >
+              Выбрать файлы
+            </button>
+            <input
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              multiple
+              onChange={(event) => {
+                const selectedFiles = Array.from(event.target.files || []);
+                const validationError = selectedFiles
+                  .map(validateFile)
+                  .find(Boolean);
+
+                if (validationError) {
+                  setError(validationError);
+                  return;
+                }
+
+                setError("");
+                setFiles((currentFiles) => [
+                  ...currentFiles,
+                  ...selectedFiles,
+                ]);
+              }}
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              type="file"
+            />
           </div>
-        )}
 
-        <button
-          style={{
-            background:"black",
-            color:"white",
-            padding:"12px 20px",
-            border:"none",
-            cursor:"pointer"
-          }}
-          onClick={sendRequest}
-        >
-          Отправить запрос
-        </button>
+          {files.length > 0 && (
+            <div>
+              {files.map((file, index) => (
+                <div className="file-row" key={`${file.name}-${index}`}>
+                  <span>
+                    {file.name} ({formatSize(file.size)})
+                  </span>
+                  <button
+                    className="danger-link"
+                    onClick={() => {
+                      setFiles((currentFiles) =>
+                        currentFiles.filter((_, fileIndex) => fileIndex !== index),
+                      );
 
-      </div>
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                    type="button"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              ))}
+              <p className="muted">Прикреплено файлов: {files.length}</p>
+            </div>
+          )}
 
+          {error && <div className="notice">{error}</div>}
+
+          {isUploading && <div className="notice">Загрузка файлов...</div>}
+
+          <div>
+            <button
+              className="button"
+              disabled={isUploading}
+              onClick={sendRequest}
+              type="button"
+            >
+              {isUploading ? "Отправляем..." : "Отправить запрос"}
+            </button>
+          </div>
+        </div>
+      </section>
     </main>
-
   );
-
 }

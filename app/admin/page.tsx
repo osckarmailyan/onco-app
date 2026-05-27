@@ -1,201 +1,186 @@
 "use client";
-export const dynamic = "force-dynamic";
 
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+type CaseStatus = "new" | "in_review" | "answered";
+
+type CaseRecord = {
+  id: string;
+  created_at: string;
+  email: string;
+  question: string;
+  file: string[] | null;
+  status: CaseStatus | null;
+  answer: string | null;
+};
+
+const statusLabels: Record<CaseStatus, string> = {
+  answered: "Ответ готов",
+  in_review: "На рассмотрении",
+  new: "Новый",
+};
+
+function getStorageUrl(path: string) {
+  const { data } = supabase.storage.from("cases").getPublicUrl(path);
+  return data.publicUrl;
+}
 
 export default function Admin() {
+  const [cases, setCases] = useState<CaseRecord[]>([]);
+  const [error, setError] = useState("");
 
-  const [cases,setCases] = useState<any[]>([]);
-  
-
-  async function loadCases(){
-
-    const { data } = await supabase
+  async function loadCases() {
+    const { data, error: loadError } = await supabase
       .from("cases")
       .select("*")
-      .order("created_at",{ascending:false});
+      .order("created_at", { ascending: false });
 
-    if(data){
-      setCases(data);
+    if (loadError) {
+      setError("Не удалось загрузить заявки.");
+      return;
     }
 
+    setCases((data || []) as CaseRecord[]);
   }
 
-  useEffect(()=>{
-    loadCases();
-  },[]);
+  useEffect(() => {
+    void loadCases();
+  }, []);
 
-  return(
-
-    <main style={{maxWidth:"900px",margin:"100px auto",fontFamily:"sans-serif"}}>
-
-      <h1 style={{fontSize:"34px",fontWeight:"bold"}}>
-        Панель врача
-      </h1>
-
-      {cases.map((c)=>(
-
-        <div key={c.id} style={{
-          border:"1px solid #ddd",
-          padding:"20px",
-          marginTop:"20px",
-          borderRadius:"8px"
-        }}>
-
-          <p><b>Email:</b> {c.email}</p>
-
-          <p style={{marginTop:"15px"}}><b>Вопрос пациента:</b></p>
-
-          <div style={{
-            background:"#f5f5f5",
-            padding:"10px",
-            borderRadius:"6px"
-          }}>
-            {c.question}
-          </div>
-
-          {c.file && c.file.length > 0 && (
-            <div style={{marginTop:"15px"}}>
-              <b>Файлы пациента:</b>
-
-              {c.file.map((f:any,i:number)=>(
-                <div key={i}>
-                  <a
-                    href={`https://cmamfntyglctiymqnlfv.supabase.co/storage/v1/object/public/cases/${f}`}
-                    target="_blank"
-                    style={{color:"blue"}}
-                  >
-                    📎 файл {i+1}
-                  </a>
-                </div>
-              ))}
-
-            </div>
-          )}
-
-          <p style={{marginTop:"15px"}}>
-            <b>Статус:</b>{" "}
-            {c.status === "in_review"
-              ? "🔵 На рассмотрении"
-              : c.status === "answered"
-              ? "🟢 Ответ готов"
-              : "🟡 Новый"}
-          </p>
-
-          <button
-            style={{marginTop:"10px"}}
-            onClick={async ()=>{
-              await supabase
-                .from("cases")
-                .update({status:"in_review"})
-                .eq("id",c.id);
-
-              loadCases();
-            }}
-          >
-            В работу
-          </button>
-
-          <p style={{color:"gray",marginTop:"10px"}}>
-            {new Date(new Date(c.created_at).getTime() + 3 * 60 * 60 * 1000)
-              .toLocaleString("ru-RU")}
-          </p>
-
-          <p style={{marginTop:"20px"}}><b>Ответ врача:</b></p>
-
-          <textarea
-  value={c.answer || ""}
-  style={{
-    width:"100%",
-    height:"120px",
-    padding:"10px",
-    border:"1px solid #ccc",
-    borderRadius:"6px"
-  }}
-  onChange={(e)=>{
-
-    const updated = cases.map((item)=>{
-
-      if(item.id === c.id){
-        return {...item,answer:e.target.value}
-      }
-
-      return item
-
-    })
-
-    setCases(updated)
-            }}
-            onBlur={async (e)=>{
-
-              const value = e.target.value;
-
-              await supabase
-                .from("cases")
-                .update({
-                  answer:value
-                })
-                .eq("id",c.id);
-
-            }}
-          />
-
-          <div style={{
-            display:"flex",
-            justifyContent:"flex-end",
-            marginTop:"15px"
-          }}>
-
-            <button
-  disabled={!c.answer}
-  style={{
-    background: c.answer ? "green" : "#999",
-    color:"white",
-    padding:"10px 20px",
-    border:"none",
-    borderRadius:"5px",
-    cursor: c.answer ? "pointer" : "not-allowed",
-    opacity: c.answer ? 1 : 0.6
-  }}
-  onClick={async ()=>{
-
-  await supabase
-    .from("cases")
-    .update({status:"answered"})
-    .eq("id",c.id);
-
-  await fetch("/api/send-email",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-  email: c.email,
-  answer: c.answer,
-  id: c.id
-})
-  });
-
-  loadCases();
-
-}}
-
->
-  Завершить
-</button>
-
-
-          </div>
-
+  return (
+    <main className="page">
+      <section className="shell stack">
+        <div>
+          <p className="eyebrow">Админ-панель</p>
+          <h1 className="section-title">Панель врача</h1>
         </div>
 
-      ))}
+        {error && <div className="notice">{error}</div>}
 
+        {cases.length === 0 && !error && (
+          <div className="card">
+            <p className="muted">Заявок пока нет.</p>
+          </div>
+        )}
+
+        {cases.map((item) => (
+          <article className="card admin-case" key={item.id}>
+            <div>
+              <p className="muted">Email пациента</p>
+              <p className="text">
+                <b>{item.email}</b>
+              </p>
+            </div>
+
+            <div>
+              <p className="muted">Вопрос пациента</p>
+              <div className="notice">{item.question || "Описание не заполнено."}</div>
+            </div>
+
+            {item.file && item.file.length > 0 && (
+              <div>
+                <p className="muted">Файлы пациента</p>
+                {item.file.map((file, index) => (
+                  <div key={file}>
+                    <a
+                      className="link"
+                      href={getStorageUrl(file)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Файл {index + 1}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p className="text">
+              <b>Статус:</b>{" "}
+              {statusLabels[(item.status || "new") as CaseStatus]}
+            </p>
+
+            <div>
+              <button
+                className="button button-secondary"
+                onClick={async () => {
+                  await supabase
+                    .from("cases")
+                    .update({ status: "in_review" })
+                    .eq("id", item.id);
+
+                  await loadCases();
+                }}
+                type="button"
+              >
+                В работу
+              </button>
+            </div>
+
+            <p className="muted">
+              {new Date(item.created_at).toLocaleString("ru-RU", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </p>
+
+            <label className="stack">
+              <span className="muted">Ответ врача</span>
+              <textarea
+                className="field textarea"
+                onBlur={async (event) => {
+                  await supabase
+                    .from("cases")
+                    .update({ answer: event.target.value })
+                    .eq("id", item.id);
+                }}
+                onChange={(event) => {
+                  setCases((currentCases) =>
+                    currentCases.map((currentCase) =>
+                      currentCase.id === item.id
+                        ? { ...currentCase, answer: event.target.value }
+                        : currentCase,
+                    ),
+                  );
+                }}
+                value={item.answer || ""}
+              />
+            </label>
+
+            <div>
+              <button
+                className="button"
+                disabled={!item.answer}
+                onClick={async () => {
+                  await supabase
+                    .from("cases")
+                    .update({ status: "answered" })
+                    .eq("id", item.id);
+
+                  await fetch("/api/send-email", {
+                    body: JSON.stringify({
+                      email: item.email,
+                      id: item.id,
+                    }),
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    method: "POST",
+                  });
+
+                  await loadCases();
+                }}
+                type="button"
+              >
+                Завершить и отправить письмо
+              </button>
+            </div>
+          </article>
+        ))}
+      </section>
     </main>
-
   );
-
 }

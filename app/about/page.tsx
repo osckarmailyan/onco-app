@@ -1,171 +1,109 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
 
 export default function About() {
-
   return (
-
-    <main style={{
-      maxWidth:"900px",
-      margin:"80px auto",
-      fontFamily:"sans-serif",
-      padding:"20px"
-    }}>
-
-      <h1 style={{
-        fontSize:"36px",
-        fontWeight:"bold"
-      }}>
-        Доктор Оскар Араратович Маилян
-      </h1>
-
-      <p style={{color:"#666",marginTop:"5px"}}>
-        Онколог-уролог, кандидат медицинских наук
-      </p>
-
-      <div style={{
-        display:"flex",
-        gap:"40px",
-        marginTop:"40px",
-        alignItems:"flex-start"
-      }}>
-
-        {/* фото */}
-
-        <img
-          src="/doctor.png"
-          style={{
-            width:"220px",
-            borderRadius:"8px"
-          }}
-        />
-
-        {/* текст */}
-
-        <div>
-
-          <p>
-          Врач-онкоуролог, специализирующийся на диагностике и лечении опухолей
-          мочеполовой системы. Занимаюсь клинической и научной работой
-          в области онкоурологии.
+    <main className="page">
+      <section className="shell hero">
+        <div className="stack">
+          <p className="eyebrow">О враче</p>
+          <h1 className="title">Доктор Оскар Араратович Маилян</h1>
+          <p className="lead">Онколог-уролог, кандидат медицинских наук</p>
+          <p className="text">
+            Врач-онкоуролог, специализирующийся на диагностике и лечении
+            опухолей мочеполовой системы. Занимается клинической и научной
+            работой в области онкоурологии.
           </p>
-
-          <p style={{marginTop:"20px"}}>
-          Работаю с пациентами с раком предстательной железы, почки,
-          мочевого пузыря и другими онкоурологическими заболеваниями.
+          <p className="text">
+            Работает с пациентами с раком предстательной железы, почки,
+            мочевого пузыря и другими онкоурологическими заболеваниями.
           </p>
-
         </div>
 
-      </div>
+        <div className="card">
+          <Image
+            alt="Доктор Оскар Араратович Маилян"
+            className="doctor-photo"
+            height={320}
+            priority
+            src="/doctor.png"
+            width={260}
+          />
+        </div>
+      </section>
 
+      <section className="shell stack">
+        <div className="grid">
+          <div className="card">
+            <h2>Специализация</h2>
+            <ul className="list">
+              <li>рак предстательной железы</li>
+              <li>рак почки</li>
+              <li>рак мочевого пузыря</li>
+              <li>опухоли мочеполовой системы</li>
+            </ul>
+          </div>
 
-      {/* специализация */}
+          <div className="card">
+            <h2>Ученая степень</h2>
+            <p className="text">Кандидат медицинских наук.</p>
+          </div>
 
-      <h2 style={{marginTop:"50px"}}>Специализация</h2>
+          <div className="card">
+            <h2>Научная деятельность</h2>
+            <p className="text">
+              Автор более 25 научных публикаций по онкоурологии и онкологии в
+              российских медицинских журналах.
+            </p>
+          </div>
+        </div>
 
-      <ul style={{marginTop:"10px"}}>
-        <li>рак предстательной железы</li>
-        <li>рак почки</li>
-        <li>рак мочевого пузыря</li>
-        <li>опухоли мочеполовой системы</li>
-      </ul>
+        <div className="card stack">
+          <h2 className="section-title">Образование</h2>
+          <p className="text">
+            Первый Московский государственный медицинский университет им. И. М.
+            Сеченова (Сеченовский университет) - лечебное дело.
+          </p>
+          <p className="text">
+            Российский университет дружбы народов (РУДН) - ординатура по
+            урологии.
+          </p>
+          <p className="text">
+            Сеченовский университет - аспирантура по онкологии.
+          </p>
+          <p className="text">
+            НИИ Урологии им. Н.А. Лопаткина - профессиональная переподготовка
+            по специальности онкология.
+          </p>
+        </div>
 
+        <div className="card stack">
+          <h2 className="section-title">Контакты</h2>
+          <p className="text">
+            Email:{" "}
+            <a className="link" href="mailto:oncoexperts@protonmail.com">
+              oncoexperts@protonmail.com
+            </a>
+            <br />
+            ИНН: 344113979050
+          </p>
+          <p className="muted">
+            Заявки принимаются только через форму на сайте. Ответ
+            предоставляется после оплаты.
+          </p>
+        </div>
 
-      {/* образование */}
-
-      <h2 style={{marginTop:"50px"}}>Образование</h2>
-
-      <p style={{marginTop:"10px"}}>
-      Первый Московский государственный медицинский университет
-      им. И. М. Сеченова (Сеченовский университет) — лечебное дело.
-      </p>
-
-      <p>
-      Российский университет дружбы народов (РУДН) — ординатура по урологии.
-      </p>
-
-      <p>
-      Сеченовский университет — аспирантура по онкологии.
-      </p>
-
-      <p>
-      НИИ Урологии им. Н.А. Лопаткина - профессиональная переподготовка по специальности онкология.
-      </p>
-
-
-
-
-      {/* степень */}
-
-      <h2 style={{marginTop:"50px"}}>Ученая степень</h2>
-
-      <p style={{marginTop:"10px"}}>
-      Кандидат медицинских наук.
-      </p>
-
-
-      {/* публикации */}
-
-      <h2 style={{marginTop:"50px"}}>Научная деятельность</h2>
-
-      <p style={{marginTop:"10px"}}>
-      Автор более 25 научных публикаций по онкоурологии
-      и онкологии в российских медицинских журналах.
-      </p>
-
-
-      {/* кнопка */}
-
-      <div style={{marginTop:"60px"}}>
-
-        <Link href="/request">
-
-          <button style={{
-            background:"black",
-            color:"white",
-            padding:"14px 24px",
-            border:"none",
-            borderRadius:"6px",
-            cursor:"pointer",
-            fontSize:"16px"
-          }}>
+        <div>
+          <Link className="button" href="/request">
             Получить второе мнение
-          </button>
+          </Link>
+        </div>
 
-        </Link>
-
-      </div>
-
-
-      <p style={{
-        marginTop:"40px",
-        fontSize:"14px",
-        color:"#777"
-      }}>
-      Заключение носит информационный характер и
-      не заменяет очную консультацию врача.
-      </p>
-
-
-      {/* КОНТАКТЫ */}
-<p style={{marginTop:"30px",fontWeight:"bold"}}>
-  Контакты
-</p>
-
-<p style={{marginTop:"10px"}}>
-  Email: oncoexperts@protonmail.com<br/>
-  ИНН: 344113979050
-</p>
-
-<p style={{marginTop:"20px",color:"#777"}}>
-  Заявки принимаются только через форму на сайте.
-  Ответ предоставляется после оплаты.
-</p>
-
+        <p className="muted">
+          Заключение носит информационный характер и не заменяет очную
+          консультацию врача.
+        </p>
+      </section>
     </main>
-
   );
-
 }

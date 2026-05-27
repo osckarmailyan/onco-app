@@ -4,127 +4,94 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
-export default function Result() {
+type CaseRecord = {
+  answer: string | null;
+  question: string | null;
+};
 
+export default function Result() {
   const params = useParams();
   const id = params?.id as string;
+  const [caseData, setCaseData] = useState<CaseRecord | null>(null);
+  const [error, setError] = useState("");
 
-  const [caseData,setCaseData] = useState<any>(null);
+  useEffect(() => {
+    if (!id) return;
 
-  useEffect(()=>{
-
-    if(!id) return;
-
-    async function loadCase(){
-
-      const { data } = await supabase
+    async function loadCase() {
+      const { data, error: loadError } = await supabase
         .from("cases")
-        .select("*")
+        .select("question, answer")
         .eq("id", id)
         .single();
 
-      if(data){
-        setCaseData(data);
+      if (loadError) {
+        setError("Ответ не найден или ссылка устарела.");
+        return;
       }
 
+      setCaseData(data as CaseRecord);
     }
 
-    loadCase();
+    void loadCase();
+  }, [id]);
 
-  },[id]);
-
-  if(!caseData){
-    return <p style={{padding:"40px"}}>Загрузка...</p>
+  if (error) {
+    return (
+      <main className="page">
+        <section className="shell narrow card stack">
+          <h1 className="section-title">Не удалось открыть ответ</h1>
+          <p className="lead">{error}</p>
+        </section>
+      </main>
+    );
   }
 
-  return(
+  if (!caseData) {
+    return (
+      <main className="page">
+        <section className="shell narrow card">
+          <p className="lead">Загрузка...</p>
+        </section>
+      </main>
+    );
+  }
 
-    <main style={{
-      maxWidth:"800px",
-      margin:"80px auto",
-      fontFamily:"sans-serif",
-      padding:"20px"
-    }}>
+  return (
+    <main className="page">
+      <section className="shell narrow stack">
+        <div>
+          <p className="eyebrow">Второе мнение</p>
+          <h1 className="section-title">Ответ врача</h1>
+          <p className="lead">
+            Ответ подготовлен по вашему медицинскому случаю.
+          </p>
+        </div>
 
-      <h1 style={{
-        fontSize:"36px",
-        fontWeight:"bold"
-      }}>
-        Второе мнение врача
-      </h1>
+        <div className="card stack">
+          <p className="muted">Ответ подготовил</p>
+          <p className="text">
+            <b>Доктор Оскар Араратович Маилян</b>
+            <br />
+            Онколог-уролог, кандидат медицинских наук
+          </p>
+        </div>
 
-      <p style={{
-        marginTop:"10px",
-        color:"#555"
-      }}>
-        Ответ подготовлен по вашему медицинскому случаю
-      </p>
+        <div className="card stack">
+          <p className="muted">Ваш вопрос</p>
+          <p className="text">{caseData.question || "Вопрос не указан."}</p>
+        </div>
 
-      <div style={{
-        marginTop:"40px",
-        padding:"20px",
-        border:"1px solid #ddd",
-        borderRadius:"8px",
-        background:"#fafafa"
-      }}>
+        <div className="card stack success">
+          <p className="muted">Ответ врача</p>
+          <p className="text">{caseData.answer || "Ответ пока готовится."}</p>
+        </div>
 
-        <p style={{fontWeight:"bold"}}>
-          Ответ подготовил
+        <p className="muted">
+          Данный ответ является информационным вторым мнением и не заменяет
+          очную консультацию врача.
         </p>
-
-        <p style={{marginTop:"5px"}}>
-          👨‍⚕️ Доктор Оскар Араратович Маилян
-        </p>
-
-        <p style={{color:"#666"}}>
-          Онколог-уролог, кандидат медицинских наук
-        </p>
-
-      </div>
-
-      <p style={{
-        marginTop:"40px",
-        fontWeight:"bold"
-      }}>
-        Ваш вопрос
-      </p>
-
-      <div style={{
-        marginTop:"10px",
-        background:"#f5f5f5",
-        padding:"20px",
-        borderRadius:"8px"
-      }}>
-        {caseData.question}
-      </div>
-
-      <p style={{
-        marginTop:"40px",
-        fontWeight:"bold"
-      }}>
-        Ответ врача
-      </p>
-
-      <div style={{
-        marginTop:"10px",
-        background:"#e8f7e8",
-        padding:"20px",
-        borderRadius:"8px"
-      }}>
-        {caseData.answer || "Ответ пока готовится"}
-      </div>
-
-      <p style={{
-        marginTop:"40px",
-        color:"#777",
-        fontSize:"14px"
-      }}>
-        ⚠️ Данный ответ является информационным вторым мнением
-        и не заменяет очную консультацию врача.
-      </p>
-
+      </section>
     </main>
-
   );
-
 }
