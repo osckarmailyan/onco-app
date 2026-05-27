@@ -19,7 +19,17 @@ function jsonError(message: string, status = 400) {
 }
 
 export async function POST(req: Request) {
-  const supabaseAdmin = getSupabaseAdmin();
+  let supabaseAdmin: ReturnType<typeof getSupabaseAdmin>;
+
+  try {
+    supabaseAdmin = getSupabaseAdmin();
+  } catch {
+    return jsonError(
+      "Загрузка файлов пока не настроена: в Vercel нужно добавить SUPABASE_SERVICE_ROLE_KEY.",
+      500,
+    );
+  }
+
   let formData: FormData;
 
   try {
@@ -67,7 +77,10 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase storage upload failed", error);
-      return jsonError("Не удалось загрузить файл. Попробуйте позже.", 502);
+      return jsonError(
+        `Supabase не принял файл: ${error.message || "проверьте bucket cases и Storage policies."}`,
+        502,
+      );
     }
 
     uploadedFiles.push(data.path);
@@ -84,7 +97,10 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error("Supabase case insert failed", error);
-    return jsonError("Не удалось отправить заявку. Попробуйте позже.", 502);
+    return jsonError(
+      `Supabase не принял заявку: ${error.message || "проверьте таблицу cases и RLS policies."}`,
+      502,
+    );
   }
 
   return Response.json({ success: true });
