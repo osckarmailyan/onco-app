@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
 
 const allowedTypes = [
   "application/pdf",
@@ -16,6 +17,14 @@ const maxFileSize = 50 * 1024 * 1024;
 function formatSize(bytes: number) {
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(1)} MB`;
+}
+
+function getSafeFileName(name: string) {
+  return name.replace(/[^\w.-]/g, "_");
+}
+
+function createFilePath(name: string) {
+  return `${crypto.randomUUID()}/${crypto.randomUUID()}_${getSafeFileName(name)}`;
 }
 
 export default function Request() {
@@ -54,28 +63,58 @@ export default function Request() {
 
     setIsUploading(true);
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("question", question);
-    files.forEach((file) => formData.append("files", file));
+    try {
+      const uploadedPaths: string[] = [];
 
-    const response = await fetch("/api/submit-request", {
-      body: formData,
-      method: "POST",
-    });
-    const result = (await response.json()) as { error?: string };
+      for (const file of files) {
+        const path = createFilePath(file.name);
 
-    setIsUploading(false);
+        const { error: uploadError } = await supabase.storage
+          .from("cases")
+          .upload(path, file, {
+            contentType: file.type,
+            upsert: false,
+          });
 
-    if (!response.ok) {
-      setError(result.error || "Ошибка отправки заявки. Попробуйте позже.");
-      return;
+        if (uploadError) {
+          throw new Error(
+            uploadError.message ||
+              "Supabase не принял файл. Попробуйте еще раз.",
+          );
+        }
+
+        uploadedPaths.push(path);
+      }
+
+      const { error: insertError } = await supabase.from("cases").insert([
+        {
+          email,
+          file: uploadedPaths,
+          question,
+          status: "new",
+        },
+      ]);
+
+      if (insertError) {
+        throw new Error(
+          insertError.message ||
+            "Файлы загружены, но заявка не сохранилась. Напишите врачу напрямую.",
+        );
+      }
+
+      setEmail("");
+      setQuestion("");
+      setFiles([]);
+      router.push("/success");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Ошибка отправки заявки. Попробуйте позже.",
+      );
+    } finally {
+      setIsUploading(false);
     }
-
-    setEmail("");
-    setQuestion("");
-    setFiles([]);
-    router.push("/success");
   }
 
   return (
