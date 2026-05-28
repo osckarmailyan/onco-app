@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import * as tus from "tus-js-client";
 import { supabase } from "../../lib/supabase";
 
 const allowedTypes = [
@@ -13,6 +14,20 @@ const allowedTypes = [
 ];
 
 const maxFileSize = 50 * 1024 * 1024;
+const resumableUploadThreshold = 6 * 1024 * 1024;
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "https://cmamfntyglctiymqnlfv.supabase.co";
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "sb_publishable_iFk8rKQ6q4LhqFEYsu1_YA_cjvodPCG";
+
+function getResumableUploadEndpoint() {
+  const url = new URL(supabaseUrl);
+  const projectId = url.hostname.split(".")[0];
+
+  return `${url.protocol}//${projectId}.storage.supabase.co/storage/v1/upload/resumable`;
+}
 
 function formatSize(bytes: number) {
   const mb = bytes / (1024 * 1024);
@@ -27,6 +42,50 @@ function createFilePath(name: string) {
   return `${crypto.randomUUID()}/${crypto.randomUUID()}_${getSafeFileName(name)}`;
 }
 
+function uploadLargeFile(
+  file: File,
+  path: string,
+  onProgress: (percentage: number) => void,
+) {
+  return new Promise<void>((resolve, reject) => {
+    const upload = new tus.Upload(file, {
+      chunkSize: 6 * 1024 * 1024,
+      endpoint: getResumableUploadEndpoint(),
+      headers: {
+        apikey: supabaseAnonKey,
+        authorization: `Bearer ${supabaseAnonKey}`,
+        "x-upsert": "false",
+      },
+      metadata: {
+        bucketName: "cases",
+        cacheControl: "3600",
+        contentType: file.type,
+        objectName: path,
+      },
+      onError(error) {
+        reject(error);
+      },
+      onProgress(bytesUploaded, bytesTotal) {
+        onProgress((bytesUploaded / bytesTotal) * 100);
+      },
+      onSuccess() {
+        resolve();
+      },
+      removeFingerprintOnSuccess: true,
+      retryDelays: [0, 3000, 5000, 10000, 20000],
+      uploadDataDuringCreation: true,
+    });
+
+    upload.findPreviousUploads().then((previousUploads) => {
+      if (previousUploads.length > 0) {
+        upload.resumeFromPreviousUpload(previousUploads[0]);
+      }
+
+      upload.start();
+    });
+  });
+}
+
 export default function Request() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +94,7 @@ export default function Request() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadStatus, setUploadStatus] = useState("");
 
   function validateFile(file: File) {
     if (!allowedTypes.includes(file.type)) {
@@ -50,6 +110,7 @@ export default function Request() {
 
   async function sendRequest() {
     setError("");
+    setUploadStatus("");
 
     if (!email.includes("@")) {
       setError("Введите корректный email.");
@@ -66,8 +127,22 @@ export default function Request() {
     try {
       const uploadedPaths: string[] = [];
 
-      for (const file of files) {
+      for (const [index, file] of files.entries()) {
         const path = createFilePath(file.name);
+        const fileLabel = `${index + 1}/${files.length}: ${file.name}`;
+
+        setUploadStatus(`Загрузка ${fileLabel}`);
+
+        if (file.size > resumableUploadThreshold) {
+          await uploadLargeFile(file, path, (percentage) => {
+            setUploadStatus(
+              `Загрузка ${fileLabel} - ${Math.round(percentage)}%`,
+            );
+          });
+
+          uploadedPaths.push(path);
+          continue;
+        }
 
         const { error: uploadError } = await supabase.storage
           .from("cases")
@@ -105,6 +180,7 @@ export default function Request() {
       setEmail("");
       setQuestion("");
       setFiles([]);
+      setUploadStatus("");
       router.push("/success");
     } catch (error) {
       setError(
@@ -230,7 +306,9 @@ export default function Request() {
 
           {error && <div className="notice">{error}</div>}
 
-          {isUploading && <div className="notice">Загрузка файлов...</div>}
+          {isUploading && (
+            <div className="notice">{uploadStatus || "Загрузка файлов..."}</div>
+          )}
 
           <div>
             <button
