@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OncoExperts
 
-## Getting Started
+Существующий сайт OncoExperts на Next.js / React с Supabase и серверными интеграциями ЮKassa и Resend.
 
-First, run the development server:
+Новая концепция — индивидуальная поддерживающая беседа с врачом-онкологом Оскаром Маиляном. Сайт не предлагает постановку диагноза, подбор или изменение лечения. Форма записи собирает только имя, email и выбранное время; загрузки медицинских документов в новом сценарии нет.
 
-```bash
+## Локальный запуск
+
+Нужны Node.js 22.18+ с поддержкой запуска TypeScript и npm.
+
+```sh
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Dev-сервер: http://localhost:3000. Переменные окружения перечислены в `env.example`; для локальной работы задайте их в игнорируемом `.env.local`. Ключи Supabase service role, ЮKassa, Resend и секрет токенов используются только на сервере. Не добавляйте их в Git или клиентскую конфигурацию.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Команды
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+npm run build
+npm run start
+npm test
+npm run typecheck
+```
 
-## Learn More
+`build` создаёт production-сборку, `start` запускает её после сборки. `test` выполняет локальные проверки без обращения к рабочей БД, списания денег или отправки писем; отдельный SQL-интеграционный прогон описан в инструкции подключения. `typecheck` проверяет TypeScript.
 
-To learn more about Next.js, take a look at the following resources:
+## Настройки встречи
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Единый источник цены и длительности — `lib/meeting-config.ts`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Стоимость: **10 000 ₽**.
+- Длительность в интерфейсе: **25–30 минут**.
+- Интервал для записи: **30 минут**.
+- Часовой пояс: **Europe/Moscow**.
+- Контакт: **oncoexperts@protonmail.com**.
 
-## Deploy on Vercel
+Изменение конфигурации не меняет сохранённые условия уже созданных записей. Версию юридических текстов обновляйте вместе с соответствующими изменениями документов и согласия.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Запись и внешние сервисы
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Онлайн-запись выключена до явного `BOOKING_ENABLED=true` и проверки остальных обязательных настроек. В выключенном или ненастроенном состоянии сайт предлагает написать по email и не показывает фиктивную успешную запись.
+
+**Расписание сейчас не формируется по указанию владельца.** В рабочую базу не нужно добавлять слоты до его отдельного решения. Код читает только реальные доступные интервалы Supabase; данные и миграции не создаются автоматически при запуске сайта.
+
+Для включения записи нужны проверенные миграции, действительное расписание, приватные ссылки на видеовстречи, серверные ключи ЮKassa и Resend, настройка webhook и проверка условий услуги. Приём оплаты следует включать после проверки всей цепочки в тестовом окружении. Возврат со страницы оплаты сам по себе не подтверждает платёж: статус сверяется сервером с ЮKassa.
+
+## Публикация на существующий Vercel
+
+Сайт публикуется из текущего каталога `onco-app` на прежний проект Vercel и домен `oncoexperts.ru`. Для текущего выпуска `BOOKING_ENABLED=false` сохраняется **при сборке и в runtime**: `/request` предварительно формируется при сборке и должен предлагать согласование встречи по email. Расписание, приём оплаты и миграции рабочей Supabase этим выпуском не включаются.
+
+Предыдущая попытка публикации 22.11.2026 остановилась на сетевом таймауте. При последующей диагностике выяснилось, что TLS-соединение к `api.vercel.com` не завершается, а официальный маршрут `https://vercel.com/api` отвечает на проверочные запросы. Старый OAuth-вход истёк, обновление вернуло `invalid_grant`; вход восстановлен после подтверждения MFA владельцем.
+
+Успешная новая выкладка пока не подтверждена. После завершения публикации здесь следует зафиксировать deployment ID и проверенный URL. Подробности диагностики и границы проверки — в [отчёте аудита](docs/AUDIT.md#процесс-публикации-диагностика-22112026). Секреты и коды входа в репозитории не хранятся.
+
+## Документация
+
+- [Подключение записи, миграции, оплата и эксплуатация](docs/booking-setup.md)
+- [Инженерный аудит и ограничения проверки](docs/AUDIT.md)
+
+Изменения внесены в существующую архитектуру и репозиторий. Старые медицинские заявки и файлы не удаляются; закрытие прежнего публичного доступа требует отдельного применения описанной миграции Supabase.

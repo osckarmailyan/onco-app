@@ -1,183 +1,80 @@
-"use client";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { getAdminAuthState } from "../../lib/admin-auth";
+import { getSupabaseAdmin } from "../../lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Встречи — панель OncoExperts",
+  robots: { index: false, follow: false },
+};
 
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
-
-type CaseStatus = "new" | "in_review" | "answered";
-
-type CaseRecord = {
+type BookingRecord = {
   id: string;
-  created_at: string;
+  name: string;
   email: string;
-  question: string;
-  file: string[] | null;
-  status: CaseStatus | null;
-  answer: string | null;
+  status: string;
+  requires_reschedule: boolean;
+  amount_rub: number;
+  created_at: string;
+  meeting_slots: { starts_at: string; ends_at: string } | null;
 };
 
-const statusLabels: Record<CaseStatus, string> = {
-  answered: "Ответ готов",
-  in_review: "На рассмотрении",
-  new: "Новый",
+const statusLabels: Record<string, string> = {
+  pending: "Ожидает оплаты",
+  paid: "Оплачена",
+  canceled: "Отменена",
 };
 
-function getStorageUrl(path: string) {
-  const { data } = supabase.storage.from("cases").getPublicUrl(path);
-  return data.publicUrl;
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "long", timeStyle: "short", timeZone: "Europe/Moscow",
+  }).format(new Date(value));
 }
 
-export default function Admin() {
-  const [cases, setCases] = useState<CaseRecord[]>([]);
-  const [error, setError] = useState("");
-
-  async function loadCases() {
-    const { data, error: loadError } = await supabase
-      .from("cases")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (loadError) {
-      setError("Не удалось загрузить заявки.");
-      return;
-    }
-
-    setCases((data || []) as CaseRecord[]);
+export default async function Admin() {
+  // Defense in depth: never query private records without checking the request,
+  // even if this component is later mounted outside the proxy matcher.
+  const requestHeaders = await headers();
+  if (getAdminAuthState(requestHeaders.get("authorization")) !== "authorized") {
+    return <main className="page"><section className="shell narrow card stack"><h1 className="section-title">Доступ ограничен</h1><p className="text">Для просмотра встреч необходим вход администратора.</p></section></main>;
   }
 
-  useEffect(() => {
-    void loadCases();
-  }, []);
+  let bookings: BookingRecord[] = [];
+  let unavailable = false;
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from("meeting_bookings")
+      .select("id,name,email,status,requires_reschedule,amount_rub,created_at,meeting_slots(starts_at,ends_at)")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) unavailable = true;
+    else bookings = (data || []) as unknown as BookingRecord[];
+  } catch {
+    unavailable = true;
+  }
 
   return (
     <main className="page">
-      <section className="shell stack">
-        <div>
-          <p className="eyebrow">Админ-панель</p>
-          <h1 className="section-title">Панель врача</h1>
+      <section className="shell narrow stack">
+        <div className="stack">
+          <p className="eyebrow">Только для администратора</p>
+          <h1 className="section-title">Индивидуальные встречи</h1>
+          <p className="text">Последние 100 записей. Время указано по Москве. Панель работает в режиме просмотра.</p>
         </div>
-
-        {error && <div className="notice">{error}</div>}
-
-        {cases.length === 0 && !error && (
-          <div className="card">
-            <p className="muted">Заявок пока нет.</p>
-          </div>
-        )}
-
-        {cases.map((item) => (
-          <article className="card admin-case" key={item.id}>
-            <div>
-              <p className="muted">Email пациента</p>
-              <p className="text">
-                <b>{item.email}</b>
-              </p>
-            </div>
-
-            <div>
-              <p className="muted">Вопрос пациента</p>
-              <div className="notice">{item.question || "Описание не заполнено."}</div>
-            </div>
-
-            {item.file && item.file.length > 0 && (
-              <div>
-                <p className="muted">Файлы пациента</p>
-                {item.file.map((file, index) => (
-                  <div key={file}>
-                    <a
-                      className="link"
-                      href={getStorageUrl(file)}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Файл {index + 1}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <p className="text">
-              <b>Статус:</b>{" "}
-              {statusLabels[(item.status || "new") as CaseStatus]}
-            </p>
-
-            <div>
-              <button
-                className="button button-secondary"
-                onClick={async () => {
-                  await supabase
-                    .from("cases")
-                    .update({ status: "in_review" })
-                    .eq("id", item.id);
-
-                  await loadCases();
-                }}
-                type="button"
-              >
-                В работу
-              </button>
-            </div>
-
-            <p className="muted">
-              {new Date(item.created_at).toLocaleString("ru-RU", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </p>
-
-            <label className="stack">
-              <span className="muted">Ответ врача</span>
-              <textarea
-                className="field textarea"
-                onBlur={async (event) => {
-                  await supabase
-                    .from("cases")
-                    .update({ answer: event.target.value })
-                    .eq("id", item.id);
-                }}
-                onChange={(event) => {
-                  setCases((currentCases) =>
-                    currentCases.map((currentCase) =>
-                      currentCase.id === item.id
-                        ? { ...currentCase, answer: event.target.value }
-                        : currentCase,
-                    ),
-                  );
-                }}
-                value={item.answer || ""}
-              />
-            </label>
-
-            <div>
-              <button
-                className="button"
-                disabled={!item.answer}
-                onClick={async () => {
-                  await supabase
-                    .from("cases")
-                    .update({ status: "answered" })
-                    .eq("id", item.id);
-
-                  await fetch("/api/send-email", {
-                    body: JSON.stringify({
-                      email: item.email,
-                      id: item.id,
-                    }),
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    method: "POST",
-                  });
-
-                  await loadCases();
-                }}
-                type="button"
-              >
-                Завершить и отправить письмо
-              </button>
-            </div>
+        {unavailable ? (
+          <div className="notice" role="alert">Не удалось загрузить записи. Проверьте серверную конфигурацию Supabase и применение миграции встреч.</div>
+        ) : bookings.length === 0 ? (
+          <div className="card"><p className="text">Записей на встречу пока нет.</p></div>
+        ) : bookings.map((booking) => (
+          <article className="card stack" key={booking.id}>
+            <h2>{booking.name}</h2>
+            {booking.requires_reschedule && <div className="notice" role="status"><strong>Нужно согласовать другое время</strong><p className="text">Оплата подтверждена после начала выбранного интервала. Свяжитесь с участником, чтобы согласовать дальнейшие действия.</p></div>}
+            <p className="text" style={{ overflowWrap: "anywhere" }}>{booking.email}</p>
+            <p className="text"><strong>Встреча:</strong> {booking.meeting_slots ? formatDate(booking.meeting_slots.starts_at) : "Время недоступно"} (МСК)</p>
+            <p className="text"><strong>Статус:</strong> {statusLabels[booking.status] || "Неизвестен"}</p>
+            <p className="text"><strong>Стоимость:</strong> {new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0 }).format(booking.amount_rub)}</p>
+            <p className="muted">Запись создана: {formatDate(booking.created_at)} (МСК)</p>
           </article>
         ))}
       </section>

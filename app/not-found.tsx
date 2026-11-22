@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function NotFound() { return <main className="page"><section className="shell narrow stack"><p className="eyebrow">Страница не найдена</p><h1 className="section-title">Кажется, здесь пусто</h1><p className="lead">Возможно, ссылка изменилась. На главной можно узнать о встрече и выбрать время для разговора.</p><div><Link className="button" href="/">На главную</Link></div></section></main>; }

@@ -1,38 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAdminAuthState } from "./lib/admin-auth";
 
 export const config = {
-  matcher: "/admin/:path*",
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
 
 export function proxy(request: NextRequest) {
-  const user = process.env.ADMIN_USER;
-  const password = process.env.ADMIN_PASSWORD;
+  const state = getAdminAuthState(request.headers.get("authorization"));
+  let response: NextResponse;
 
-  if (!user || !password) {
-    return new NextResponse("Admin access is not configured.", { status: 503 });
+  if (state === "authorized") {
+    response = NextResponse.next();
+  } else if (state === "unconfigured") {
+    response = new NextResponse("Admin access is not configured.", { status: 503 });
+  } else {
+    response = new NextResponse("Authentication required.", {
+      headers: { "WWW-Authenticate": 'Basic realm="OncoExperts Admin", charset="UTF-8"' },
+      status: 401,
+    });
   }
 
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader) {
-    const [scheme, encoded] = authHeader.split(" ");
-
-    if (scheme === "Basic" && encoded) {
-      const decoded = atob(encoded);
-      const separatorIndex = decoded.indexOf(":");
-      const providedUser = decoded.slice(0, separatorIndex);
-      const providedPassword = decoded.slice(separatorIndex + 1);
-
-      if (providedUser === user && providedPassword === password) {
-        return NextResponse.next();
-      }
-    }
-  }
-
-  return new NextResponse("Authentication required.", {
-    headers: {
-      "WWW-Authenticate": 'Basic realm="OncoExperts Admin"',
-    },
-    status: 401,
-  });
+  response.headers.set("Cache-Control", "private, no-store, max-age=0");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  return response;
 }
