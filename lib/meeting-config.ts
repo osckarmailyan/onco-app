@@ -5,7 +5,7 @@ export const meetingConfig = {
   durationMinutes: 30,
   timeZone: 'Europe/Moscow',
   supportEmail: 'oncoexperts@protonmail.com',
-  legalVersion: '2026-11-22',
+  legalVersion: '2026-11-23',
 } as const;
 
 export function formatPrice(price: number = meetingConfig.priceRub) {
