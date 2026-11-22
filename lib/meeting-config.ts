@@ -1,6 +1,7 @@
 /** Public presentation settings. Existing paid bookings keep their original price. */
 export const meetingConfig = {
   priceRub: 10000,
+  referencePriceRub: 15000,
   durationLabel: '25–30 минут',
   durationMinutes: 30,
   timeZone: 'Europe/Moscow',
