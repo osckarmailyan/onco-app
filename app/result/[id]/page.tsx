@@ -22,7 +22,7 @@ export default function PreviousRequest() {
             Не прикладывайте медицинские документы к первому письму.
           </p>
           <p className="text">Теперь здесь можно записаться на индивидуальный поддерживающий разговор.</p>
-          <div><Link className="button" href="/request">Записаться на разговор</Link></div>
+          <div><Link className="button" href="/request">Записаться на встречу</Link></div>
         </div>
       </section>
     </main>

@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/site-metadata";
 import Image from "next/image";
 import Link from "next/link";
 import { meetingConfig } from "@/lib/meeting-config";
 
-export const metadata: Metadata = {
-  title: "Оскар Маилян — о человеке, с которым вы встретитесь",
-  description: "Врач-онколог Оскар Маилян: профессиональный опыт, образование и спокойный разговор о жизни с онкологическим заболеванием.",
-};
+export const metadata = createPageMetadata({ title: "Оскар Маилян — о человеке, с которым вы встретитесь", description: "Врач-онколог Оскар Маилян: профессиональный опыт, образование и спокойный разговор о жизни с онкологическим заболеванием.", path: "/about" });
 
 export default function About() {
   return (
@@ -23,22 +20,23 @@ export default function About() {
             человек — со своими страхами, семьёй, планами и надеждами.
           </p>
           <p className="text">
-            Мне важно, чтобы у человека была возможность спокойно поговорить,
-            быть услышанным и не чувствовать себя один на один с заболеванием.
-            На нашей встрече можно говорить о том, что сейчас важно именно вам.
+            В обычном приёме время на общение часто ограничено. Мне хотелось
+            создать формат, в котором можно не торопиться, не бояться неудобного
+            вопроса и спокойно говорить о том, что важно именно вам.
+            Для этого существует OncoExperts.
           </p>
           <div>
-            <Link className="button" href="/request">Записаться на разговор</Link>
+            <Link className="button" href="/request" data-analytics-event="cta_click" data-analytics-placement="doctor">Записаться на встречу</Link>
           </div>
         </div>
         <div>
           <Image
             alt="Оскар Маилян, врач-онколог"
             className="doctor-photo profile-photo"
-            height={1402}
+            height={1059}
             priority
-            src="/doctor-portrait.png"
-            width={1122}
+            src="/doctor-color.png"
+            width={1485}
             sizes="(max-width: 760px) 100vw, 40vw"
           />
         </div>
@@ -57,8 +55,9 @@ export default function About() {
           <ul className="list">
             <li>Врач-онколог, уролог.</li>
             <li>Кандидат медицинских наук.</li>
-            <li>Автор более 25 научных публикаций по онкоурологии и онкологии в российских медицинских журналах.</li>
+            <li>Научная работа связана с онкоурологией и онкологией.</li>
           </ul>
+          <a className="link" href="https://www.sechenov.ru/pressroom/publications/mailyan-ovsep-araratovich/" target="_blank" rel="noopener noreferrer">Сведения о научной работе</a>
         </div>
         <div className="card stack">
           <h3>Образование</h3>
@@ -76,7 +75,7 @@ export default function About() {
         </p>
         <div className="card stack">
           <h3>Связаться со мной</h3>
-          <a className="link" href={`mailto:${meetingConfig.supportEmail}`}>{meetingConfig.supportEmail}</a>
+          <a data-analytics-event="contact_click" data-analytics-placement="doctor" className="link" href={`mailto:${meetingConfig.supportEmail}`}>{meetingConfig.supportEmail}</a>
           <p className="muted">ИНН: 344113979050</p>
           <Link className="link" href="/terms">Условия предоставления услуг</Link>
         </div>

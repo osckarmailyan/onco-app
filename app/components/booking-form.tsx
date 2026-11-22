@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { meetingConfig, formatPrice } from "@/lib/meeting-config";
 import { isCheckoutUrl } from "@/lib/booking-validation";
+import { trackAnalytics } from "@/lib/analytics";
 
 type Slot = { id: string; startsAt: string; endsAt: string };
 const dateKey = (iso: string) => new Intl.DateTimeFormat("en-CA", { timeZone: meetingConfig.timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(iso));
@@ -60,6 +61,7 @@ export function BookingForm() {
     if (!selected || !consent || !terms) { setError("Выберите время и подтвердите согласие с условиями."); return; }
     const payload = JSON.stringify({ name: name.trim(), email: email.trim(), slotId, consentVersion: meetingConfig.legalVersion });
     setSending(true);
+    trackAnalytics("booking_form_submit", "booking");
     try {
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
       const fingerprint = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
@@ -78,6 +80,7 @@ export function BookingForm() {
       }
       const destination = new URL(data.confirmationUrl);
       if (!isCheckoutUrl(destination.href) && !(destination.origin === window.location.origin && destination.pathname === "/success")) throw new Error("Не удалось открыть страницу оплаты.");
+      trackAnalytics("payment_redirect", "booking");
       window.location.assign(destination.href);
     } catch (caught) {
       setError(caught instanceof Error && caught.name !== "TimeoutError" && caught.name !== "SyntaxError" ? caught.message : "Не удалось связаться с сервисом. Повторите попытку — повторное нажатие не создаст вторую оплату.");

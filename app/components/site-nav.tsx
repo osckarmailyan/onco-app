@@ -15,7 +15,7 @@ export function SiteNav() {
         <Link href="/#how" onClick={close}>Как всё проходит</Link>
         <Link href="/#doctor" onClick={close}>О враче</Link>
         <Link href="/#faq" onClick={close}>Вопросы</Link>
-        <Link href="/request" className="button nav-cta" onClick={close}>Записаться</Link>
+        <Link href="/request" aria-label="Записаться на встречу" data-analytics-event="cta_click" data-analytics-placement="navigation" className="button nav-cta" onClick={close}>Записаться</Link>
       </nav>
     </div>
   </header>;

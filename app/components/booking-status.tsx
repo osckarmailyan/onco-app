@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { meetingConfig } from "@/lib/meeting-config";
 import { Icon } from "./ui-icon";
+import { trackAnalytics } from "@/lib/analytics";
 
 type Status = { status: "pending" | "paid" | "canceled" | "expired"; startsAt?: string; endsAt?: string; emailSent: boolean; needsReschedule?: boolean; instructions?: string };
 export function BookingStatus() {
@@ -13,6 +14,7 @@ export function BookingStatus() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [checks, setChecks] = useState(0);
+  const reportedPaid = useRef(false);
   const check = useCallback(async (signal?: AbortSignal) => {
     if (!token || !/^[a-f0-9]{64}$/.test(token)) { setError("Для проверки записи нужна ссылка, которую вы получили после оплаты."); setLoading(false); return; }
     setLoading(true); setError("");
@@ -32,6 +34,13 @@ export function BookingStatus() {
     return () => { clearTimeout(timer); controller.abort(); };
   }, [status, checks, check, error]);
   const paid = status?.status === "paid";
+  useEffect(() => {
+    // The API verifies the provider payment; arriving on /success never counts as payment.
+    if (paid && !reportedPaid.current) {
+      reportedPaid.current = true;
+      trackAnalytics("payment_success", "status");
+    }
+  }, [paid]);
   return <section className="card stack status-card" aria-busy={loading}>
     <div className="status-icon"><Icon name={paid ? "check" : "chat"}/></div>
     <p className="eyebrow">Ваша встреча</p>

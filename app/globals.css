@@ -51,8 +51,9 @@ img { max-width:100%; }
 .site-nav > a:not(.button):hover { color:var(--foreground); }
 .nav-cta { min-height:42px; padding:10px 23px; font-size:14px; }
 .menu-toggle { display:none; }
-.hero { display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:45px; padding-top:64px; padding-bottom:65px; }
+.hero { display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:45px; padding-top:48px; padding-bottom:65px; }
 .hero-copy { padding:10px 0; }
+.home-page .hero .title { font-size:clamp(40px,4.25vw,58px); }
 .tiny-leaf { width:16px; height:9px; background:#9aa68c; border-radius:100% 0 100% 0; transform:rotate(-25deg); }
 .hero-intro { font-size:18px; line-height:1.75; color:#5d6968; max-width:480px; margin-bottom:15px; }
 .hero-description { font-size:16px; line-height:1.75; color:#5d6968; max-width:450px; margin-bottom:29px; }
@@ -63,9 +64,9 @@ img { max-width:100%; }
 .hero-visual { position:relative; padding:0 0 0 15px; }
 .portrait-arch { position:relative; min-height:528px; border-radius:48% 48% 12px 12px; background:#e6eadd; overflow:hidden; }
 .arch-orbit { position:absolute; width:420px; height:420px; border:1px solid #c8d0bd; border-radius:50%; top:34px; left:50%; transform:translateX(-50%); }
-.portrait-caption { position:absolute; left:0; right:0; top:62px; text-align:center; font-size:23px; font-family:Georgia,serif; line-height:1.4; z-index:1; }
+.portrait-caption { position:absolute; left:5%; right:5%; top:42px; text-align:center; font-size:23px; font-family:Georgia,serif; line-height:1.4; z-index:1; }
 .portrait-caption em { color:#5e6c56; }
-.hero-portrait { position:absolute; width:129%; max-width:none; left:-14.5%; bottom:0; height:auto; mix-blend-mode:multiply; }
+.hero-portrait { position:absolute; width:108%; max-width:none; left:-4%; bottom:0; height:auto; }
 .arch-star { position:absolute; top:190px; right:28px; color:#929f7d; font-size:68px; line-height:1; font-family:Georgia,serif; }
 .portrait-label { position:absolute; bottom:56px; left:-9px; display:flex; align-items:center; gap:13px; border:1px solid #ebece5; border-radius:10px; background:#fff; box-shadow:0 8px 40px #20364a09; padding:17px 24px; }
 .portrait-label-icon { display:grid; place-items:center; width:41px; height:41px; background:#edf0e8; color:#728061; border-radius:50%; }
@@ -81,9 +82,10 @@ img { max-width:100%; }
 .section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:30px; margin-bottom:40px; }
 .section-heading h2 { margin-bottom:0; }
 .section-aside { color:var(--muted); font-size:15px; max-width:335px; line-height:1.8; margin:0 0 5px; }
-.topics-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
-.topic-card { border:1px solid var(--line); border-radius:12px; padding:30px; background:#fcfcf9; }
+.topics-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:18px; }
+.topic-card { grid-column:span 2; border:1px solid var(--line); border-radius:12px; padding:30px; background:#fcfcf9; }
 .topic-icon { color:#78876b; display:grid; place-items:center; border-radius:50%; width:44px; height:44px; background:#edf0e6; margin-bottom:24px; }
+.topic-card:nth-last-child(-n+2) { grid-column:span 3; }
 .topic-card h3 { font-size:19px; margin-bottom:12px; }
 .topic-card p { color:var(--muted); font-size:15px; line-height:1.8; margin:0; }
 .meeting-section { background:#eceee5; padding:80px 0; }
@@ -103,7 +105,7 @@ img { max-width:100%; }
 .doctor-section { border-top:1px solid var(--line); display:grid; grid-template-columns:.9fr 1.1fr; align-items:center; gap:90px; }
 .doctor-portrait-panel { position:relative; background:#ebe8df; border-radius:12px; overflow:hidden; padding-top:70px; }
 .doctor-portrait-detail { position:absolute; left:30px; top:22px; font-size:80px; color:#a9ad96; }
-.doctor-photo { width:100%; height:auto; display:block; mix-blend-mode:multiply; }
+.doctor-photo { width:100%; height:auto; display:block; }
 .doctor-name { padding:24px 26px; background:#f0eee7; border-top:1px solid #dcded2; display:grid; gap:5px; }
 .doctor-name strong { font-family:Georgia,serif; font-size:25px; font-weight:400; }
 .doctor-name span { color:var(--muted); font-size:13px; }
@@ -254,7 +256,6 @@ img { max-width:100%; }
  .portrait-arch { min-height:415px; border-radius:47% 47% 10px 10px; }
  .portrait-caption { top:40px; font-size:23px; }
  .arch-orbit { width:330px; height:330px; top:25px; }
- .hero-portrait { width:125%; left:-12.5%; }
  .arch-star { right:15px; top:150px; font-size:52px; }
  .portrait-label { left:0; bottom:48px; padding:12px 18px; }
  .portrait-label strong { font-size:14px; }
@@ -271,6 +272,8 @@ img { max-width:100%; }
  .section-aside { font-size:14px; max-width:none; }
  .desktop-break { display:none; }
  .topics-grid { grid-template-columns:1fr 1fr; gap:12px; }
+ .topic-card,.topic-card:nth-last-child(-n+2) { grid-column:auto; }
+ .topic-card:last-child { grid-column:1 / -1; }
  .topic-card { padding:21px 18px; border-radius:10px; }
  .topic-icon { width:38px; height:38px; margin-bottom:18px; }
  .topic-icon svg { width:21px; height:21px; }
@@ -327,7 +330,7 @@ img { max-width:100%; }
  .mobile-booking-bar { display:flex; position:fixed; z-index:25; bottom:0; left:0; width:100%; padding:12px 20px calc(12px + env(safe-area-inset-bottom)); background:#f8f7f3f5; border-top:1px solid var(--line); align-items:center; justify-content:space-between; gap:15px; }
  .mobile-booking-bar > div { display:grid; min-width:0; gap:3px; }
  .mobile-booking-duration { font-size:11px; color:var(--muted); }
- .mobile-booking-bar .button { flex-shrink:0; min-height:44px; padding:11px 25px; font-size:14px; }
+ .mobile-booking-bar .button { flex-shrink:0; max-width:170px; min-height:44px; padding:10px 15px; font-size:13px; }
  .hero-meta > .meeting-price { flex-basis:100%; }
  .grid { grid-template-columns:1fr; }
  .card { padding:23px; }
@@ -347,11 +350,17 @@ img { max-width:100%; }
 
 .timezone-note,.booking-submit-note,.service-footnote,.visual-note,.service-boundary p,.footer-bottom,.footer-top p { color:#616e5e; }
 
-.hero-portrait { width:108%; left:-4%; }
-.portrait-caption { top:42px; left:5%; right:5%; }
-@media(max-width:760px) { .portrait-caption { top:42px; font-size:20px; } .hero-portrait { width:108%; left:-4%; } }
-
-.hero-portrait,.doctor-photo { mix-blend-mode:normal; }
 
 .profile-photo { max-width:430px; margin-inline:auto; border-radius:14px; }
-@media(max-width:760px) { .portrait-caption { top:68px; font-size:18px; } .service-boundary p,.footer-bottom,.hero-meta,.visual-note,.service-footnote,.portrait-label div > span,.doctor-credentials span,.mobile-booking-duration { font-size:12px; } }
+@media(max-width:760px) { .service-boundary p,.footer-bottom,.hero-meta,.visual-note,.service-footnote,.portrait-label div > span,.doctor-credentials span,.mobile-booking-duration { font-size:12px; } }
+
+/* A short privacy note in the existing visual system. */
+.privacy-section { display:grid; grid-template-columns:56px 1fr; gap:26px; align-items:start; margin-top:0; margin-bottom:90px; padding:36px; background:#edf0e7; border-color:#dde3d5; }
+.privacy-section .topic-icon { margin:0; background:#e1e7d8; width:48px; height:48px; }
+.privacy-section .eyebrow { margin-bottom:12px; }
+.privacy-section h2 { font-size:32px; margin-bottom:18px; }
+.privacy-section p:not(.eyebrow) { max-width:850px; color:#5b6862; line-height:1.8; }
+.profile-photo { background:#e9ede1; }
+@media(max-width:760px) { .privacy-section { grid-template-columns:1fr; gap:18px; padding:24px; margin-bottom:55px; } .privacy-section h2 { font-size:28px; } .steps-grid p { font-size:16px; } }
+
+.doctor-copy > .text-link,.faq-contact > .text-link { display:inline-block; min-height:44px; padding-block:8px; }
